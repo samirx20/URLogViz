@@ -485,13 +485,13 @@ export default function AnalysisPage() {
       </Tabs>
       {/* Modal for detailed chart view */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-[95vh] p-0 m-0 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-[90vh] p-0">
           <DialogHeader className="p-4 pb-2">
             <DialogTitle>{modalTitle}</DialogTitle>
           </DialogHeader>
-          <div className="p-4 overflow-auto h-[calc(95vh-80px)] w-full">
+          <div className="p-4 overflow-auto h-[calc(90vh-80px)]">
             {modalType === "chart" && modalData && (
-              <div className="h-[calc(95vh-120px)]">
+              <div className="h-[calc(90vh-120px)]">
                 <Chart 
                   data={modalData.data} 
                   lines={modalData.lines} 
@@ -499,12 +499,12 @@ export default function AnalysisPage() {
               </div>
             )}
             {modalType === "targetActual" && modalData && (
-              <div className="h-[calc(95vh-120px)]">
+              <div className="h-[calc(90vh-120px)]">
                 <TargetActualChart data={modalData.data} />
               </div>
             )}
             {modalType === "scatter" && modalData && (
-              <div className="h-[calc(95vh-120px)]">
+              <div className="h-[calc(90vh-120px)]">
                 <ScatterPlot data={modalData.data} />
               </div>
             )}
