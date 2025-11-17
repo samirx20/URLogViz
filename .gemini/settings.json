@@ -1,0 +1,31 @@
+{
+    "mcpServers": {
+      "shadcn": {
+        "command": "npx",
+        "args": [
+          "shadcn@latest",
+          "mcp"
+        ]
+      },
+      "claude-task-master": {
+        "command": "npx",
+        "args": [
+          "task-master-ai"
+        ]
+      },
+      "supabase": {
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "-y",
+          "@supabase/mcp-server-supabase@latest",
+          "--read-only",
+          "--project-ref=egccejuyvyvduvqetevg"
+        ],
+        "env": {
+          "SUPABASE_ACCESS_TOKEN": "sbp_347ecbd45d74ec6a0d1afbd4fbf4594729b22eae"
+        }
+      }
+    }
+  }
