@@ -15,7 +15,8 @@ import {
   Network,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client"; 
+import { createClient } from "@/lib/supabase/client";
+import React from "react"; 
 
 // --- DUMMY DATA ---
 // In a real app, you'd fetch this data based on the page ID
@@ -75,7 +76,14 @@ const anomalyData = [
 
 // --- COMPONENTS (Mock definitions) ---
 // You would import these from "@/components/ui/card" etc.
-const KpiCard = ({ title, value, description, icon }) => (
+interface KpiCardProps {
+  title: string;
+  value: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const KpiCard: React.FC<KpiCardProps> = ({ title, value, description, icon }) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
