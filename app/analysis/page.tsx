@@ -27,10 +27,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export default function AnalysisPage() {
     const [analysisId, setAnalysisId] = useState<string | null>(null);
     const [analysisData, setAnalysisData] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [modalData, setModalData] = useState<any>(null);
-    const [modalTitle, setModalTitle] = useState("");
+    const [modalTitle, setModalTitle] = useState<string>("");
     const [modalType, setModalType] = useState<"chart" | "targetActual" | "scatter" | null>(null);
     const supabase = createClient();
 
@@ -70,7 +70,7 @@ export default function AnalysisPage() {
     }
 
     // --- Helper to format data for charts with sampling to improve performance ---
-    const formatChartData = (timeData, jointData) => {
+    const formatChartData = (timeData: number[], jointData: any) => {
       if (!timeData || !jointData || !Array.isArray(timeData)) return [];
 
       // Sample data to improve performance - take every nth point
@@ -92,7 +92,7 @@ export default function AnalysisPage() {
       return sampledData;
     }
 
-    const formatTargetActualData = (timeData, targetData, actualData) => {
+    const formatTargetActualData = (timeData: number[], targetData: number[], actualData: number[]) => {
       if (!timeData || !targetData || !actualData || !Array.isArray(timeData)) return [];
 
       // Sample data to improve performance - take every nth point
@@ -136,7 +136,7 @@ export default function AnalysisPage() {
     const actualCurrentData = analysisData.ts_actual_current ? formatChartData(analysisData.ts_actual_current.time, analysisData.ts_actual_current) : [];
     const controlCurrentData = analysisData.ts_control_current ? formatChartData(analysisData.ts_control_current.time, analysisData.ts_control_current) : [];
 
-    const targetPositionData = (jointIndex) => {
+    const targetPositionData = (jointIndex: number) => {
       if (!analysisData.ts_target_position || !analysisData.ts_actual_position) return [];
       return formatTargetActualData(
         analysisData.ts_target_position.time,
@@ -146,7 +146,7 @@ export default function AnalysisPage() {
     };
 
     // Function to open modal with chart data
-    const openChartModal = (data, lines, title, type) => {
+    const openChartModal = (data: any, lines: any[], title: string, type: "chart" | "targetActual" | "scatter") => {
       setModalData({ data, lines });
       setModalTitle(title);
       setModalType(type);
@@ -154,7 +154,7 @@ export default function AnalysisPage() {
     };
 
     // Function to open target vs actual modal
-    const openTargetActualModal = (data, jointIndex, title) => {
+    const openTargetActualModal = (data: any, jointIndex: number, title: string) => {
       setModalData({ data, jointIndex });
       setModalTitle(title);
       setModalType("targetActual");
@@ -476,8 +476,8 @@ export default function AnalysisPage() {
 
       </Tabs>
       {/* Modal for detailed chart view */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen} className="w-full max-w-full !w-full !max-w-full">
-        <DialogContent className="max-w-none max-h-none w-full h-full p-0 m-0 rounded-none border-0 !w-full !max-w-full !max-h-none !m-0">
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-full max-h-full w-full h-full p-0 m-0 rounded-none border-0">
           <DialogHeader className="p-4 pb-2">
             <DialogTitle>{modalTitle}</DialogTitle>
           </DialogHeader>

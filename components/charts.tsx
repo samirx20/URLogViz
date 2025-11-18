@@ -125,7 +125,7 @@ export const ScatterPlot: React.FC<ScatterChartPropsType> = ({ data }) => {
         <CartesianGrid />
         <XAxis type="number" dataKey="x" name="X" />
         <YAxis type="number" dataKey="y" name="Y" />
-        <ZAxis type="number" range={[200]} dataKey="z" name="Z" />
+        <ZAxis type="number" range={[200, 2000]} dataKey="z" name="Z" />
         <Tooltip cursor={{ strokeDasharray: '3 3' }} />
         <Legend />
         <Scatter name="Joint Data" data={data} fill="#8884d8" />

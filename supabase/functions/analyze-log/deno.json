@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "@/supabase-client": "../_shared/supabase-client.ts",
-    "@/column-indices": "../_shared/column-indices.ts"
-  }
-}

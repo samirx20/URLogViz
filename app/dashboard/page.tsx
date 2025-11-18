@@ -92,8 +92,8 @@ const KpiCard = ({ title, value, description, icon }) => (
 // This would be at a route like /dashboard
 export default function DashboardPage() {
   const [analysisId, setAnalysisId] = useState<string | null>(null);
-  const [analysisData, setAnalysisData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = createClient();
 
   useEffect(() => {
@@ -161,26 +161,26 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title="Max Following Error"
-          value={`${analysisData.kpi_max_following_error.value.toFixed(2)} ${analysisData.kpi_max_following_error.unit || 'rad'}`}
-          description={`Joint ${analysisData.kpi_max_following_error.joint} @ ${analysisData.kpi_max_following_error.time}s`}
+          value={`${analysisData.kpi_max_following_error?.value?.toFixed(2) || '0'} ${analysisData.kpi_max_following_error?.unit || 'rad'}`}
+          description={`Joint ${analysisData.kpi_max_following_error?.joint || 'N/A'} @ ${analysisData.kpi_max_following_error?.time || 0}s`}
           icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
         />
         <KpiCard
           title="Peak Motor Current"
-          value={`${analysisData.kpi_peak_current.value.toFixed(2)} ${analysisData.kpi_peak_current.unit || 'A'}`}
-          description={`Joint ${analysisData.kpi_peak_current.joint} @ ${analysisData.kpi_peak_current.time}s`}
+          value={`${analysisData.kpi_peak_current?.value?.toFixed(2) || '0'} ${analysisData.kpi_peak_current?.unit || 'A'}`}
+          description={`Joint ${analysisData.kpi_peak_current?.joint || 'N/A'} @ ${analysisData.kpi_peak_current?.time || 0}s`}
           icon={<Zap className="h-4 w-4 text-muted-foreground" />}
         />
         <KpiCard
           title="Peak Temperature"
-          value={`${analysisData.kpi_peak_temp.value.toFixed(1)} ${analysisData.kpi_peak_temp.unit || '°C'}`}
-          description={`Joint ${analysisData.kpi_peak_temp.joint}`}
+          value={`${analysisData.kpi_peak_temp?.value?.toFixed(1) || '0'} ${analysisData.kpi_peak_temp?.unit || '°C'}`}
+          description={`Joint ${analysisData.kpi_peak_temp?.joint || 'N/A'}`}
           icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
         />
         <KpiCard
           title="Peak TCP Force"
-          value={`${analysisData.kpi_peak_tcp_force.value.toFixed(1)} ${analysisData.kpi_peak_tcp_force.unit || 'N'}`}
-          description={`@ ${analysisData.kpi_peak_tcp_force.time}s (${analysisData.kpi_peak_tcp_force.axis}-axis)`}
+          value={`${analysisData.kpi_peak_tcp_force?.value?.toFixed(1) || '0'} ${analysisData.kpi_peak_tcp_force?.unit || 'N'}`}
+          description={`@ ${analysisData.kpi_peak_tcp_force?.time || 0}s (${analysisData.kpi_peak_tcp_force?.axis || 'N/A'}-axis)`}
           icon={<Network className="h-4 w-4 text-muted-foreground" />}
         />
       </div>
