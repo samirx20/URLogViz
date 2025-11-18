@@ -8,20 +8,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   AlertTriangle,
   FileText,
   Thermometer,
-  Timer,
   Zap,
-  Move3d,
   Network,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -195,75 +185,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* 3. Anomaly Log & 3D Path */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Anomaly Log */}
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Anomaly & Event Log</CardTitle>
-            <CardDescription>
-              Key events and detected issues from the log.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>Event Type</TableHead>
-                  <TableHead>Joint</TableHead>
-                  <TableHead>Details</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {analysisData.anomalies.map((event, index) => (
-                  <TableRow key={index} className="cursor-pointer">
-                    <TableCell className="font-medium">
-                      {event.time}s
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`font-medium ${
-                          event.type.includes("Error")
-                            ? "text-red-500"
-                            : "text-yellow-500"
-                        }`}
-                      >
-                        {event.type}
-                      </span>
-                    </TableCell>
-                    <TableCell>{event.joint || "N/A"}</TableCell>
-                    <TableCell>{event.details}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* 3D Tool Path Plot */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>3D Tool Path</CardTitle>
-            <CardDescription>
-              Physical [X, Y, Z] path of the tool center point (TCP).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[350px] w-full flex items-center justify-center bg-muted rounded-md">
-              <div className="text-center text-muted-foreground">
-                <Move3d className="mx-auto h-12 w-12" />
-                <p className="mt-2">
-                  3D Plot (e.g., with Plotly.js) renders here.
-                </p>
-                <p className="text-sm">
-                  (Data: `ts_tcp_path`)
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

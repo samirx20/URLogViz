@@ -50,7 +50,7 @@ export default function AnalysisPage() {
           .select("*") // Select all data
           .eq("id", analysisId)
           .single();
-        
+
         if (error) {
           console.error("Error fetching analysis data:", error);
         } else {
@@ -72,11 +72,11 @@ export default function AnalysisPage() {
     // --- Helper to format data for charts with sampling to improve performance ---
     const formatChartData = (timeData, jointData) => {
       if (!timeData || !jointData || !Array.isArray(timeData)) return [];
-      
+
       // Sample data to improve performance - take every nth point
       const samplingRate = Math.max(1, Math.floor(timeData.length / 100)); // Max 100 points
       const sampledData = [];
-      
+
       for (let i = 0; i < timeData.length; i += samplingRate) {
         sampledData.push({
           time: timeData[i],
@@ -88,17 +88,17 @@ export default function AnalysisPage() {
           j6: jointData.j6?.[i],
         });
       }
-      
+
       return sampledData;
     }
 
     const formatTargetActualData = (timeData, targetData, actualData) => {
       if (!timeData || !targetData || !actualData || !Array.isArray(timeData)) return [];
-      
+
       // Sample data to improve performance - take every nth point
       const samplingRate = Math.max(1, Math.floor(timeData.length / 100)); // Max 100 points
       const sampledData = [];
-      
+
       for (let i = 0; i < timeData.length; i += samplingRate) {
         sampledData.push({
           time: timeData[i],
@@ -106,13 +106,13 @@ export default function AnalysisPage() {
           actual: actualData[i],
         });
       }
-      
+
       return sampledData;
     }
 
     const followingErrorData = analysisData.ts_following_error ? formatChartData(analysisData.ts_following_error.time, analysisData.ts_following_error) : [];
     const tempData = analysisData.ts_joint_temps ? formatChartData(analysisData.ts_joint_temps.time, analysisData.ts_joint_temps) : [];
-    
+
     const tcpOrientationData = analysisData.ts_tcp_orientation ? formatChartData(analysisData.ts_tcp_orientation.time, {
       j1: analysisData.ts_tcp_orientation.rx,
       j2: analysisData.ts_tcp_orientation.ry,
@@ -176,12 +176,12 @@ export default function AnalysisPage() {
 
 
   return (
-    <div className="flex-1 space-y-4 p-0 md:p-0 pt-6 bg-background text-foreground">
-      <h2 className="text-3xl font-bold tracking-tight ml-4 md:ml-8">
-        Detailed Analysis Suite
+    <div className="flex-1 w-full space-y-4 bg-background text-foreground">
+      <h2 className="text-3xl font-bold tracking-tight ml-0 md:ml-0 px-4 md:px-8">
+        Analysis
       </h2>
-      <Tabs defaultValue="kinematics" className="space-y-4">
-        <TabsList className="w-full justify-start px-8">
+      <Tabs defaultValue="kinematics" className="w-full">
+        <TabsList className="w-fit justify-start max-w-full min-w-fit ml-4 md:ml-8">
           <TabsTrigger value="kinematics">Kinematics (Movement)</TabsTrigger>
           <TabsTrigger value="dynamics">Dynamics (Forces)</TabsTrigger>
           <TabsTrigger value="electrical">Electrical (Power)</TabsTrigger>
@@ -192,9 +192,9 @@ export default function AnalysisPage() {
         {/* =======================
               TAB 1: KINEMATICS
            ======================= */}
-        <TabsContent value="kinematics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+        <TabsContent value="kinematics" className="space-y-0 w-full p-2 md:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-0 md:mx-0">
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               tcpOrientationData,
               [
                 { key: "j1", name: "Rx", color: "#8884d8" },
@@ -205,7 +205,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Tool Orientation vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart
                   data={tcpOrientationData}
                   lines={[
@@ -214,10 +214,9 @@ export default function AnalysisPage() {
                     { key: "j3", name: "Rz", color: "#ffc658" },
                   ]}
                 />
-                <CardDescription className="mt-2">Data: `ts_tcp_orientation`</CardDescription>
               </CardContent>
             </Card>
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               followingErrorData,
               [
                 { key: "j1", name: "J1 Error", color: "#8884d8" },
@@ -231,7 +230,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Following Error vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart
                   data={followingErrorData}
                   lines={[
@@ -243,17 +242,17 @@ export default function AnalysisPage() {
                     { key: "j6", name: "J6 Error", color: "#db6234" },
                   ]}
                 />
-                <CardDescription className="mt-2">Data: `ts_following_error`</CardDescription>
               </CardContent>
             </Card>
           </div>
-          <Card className="h-full flex flex-col">
+          <div className="mt-6 md:mt-8">
+          <Card className="flex flex-col mx-0 md:mx-0 p-3 md:p-4">
             <CardHeader><CardTitle>Joint Position Tracking (Target vs. Actual)</CardTitle></CardHeader>
-            <CardContent className="flex-grow grid gap-4 md:grid-cols-2">
+            <CardContent className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {[1, 2, 3, 4, 5, 6].map((joint) => (
-                <div 
-                  key={joint} 
-                  className="h-80 cursor-pointer hover:bg-accent transition-colors p-2 rounded-md" 
+                <div
+                  key={joint}
+                  className="cursor-pointer hover:bg-accent transition-colors p-2 md:p-3 rounded-md"
                   onClick={() => openTargetActualModal(
                     targetPositionData(joint),
                     joint,
@@ -264,16 +263,16 @@ export default function AnalysisPage() {
                 </div>
               ))}
             </CardContent>
-            <CardDescription className="p-6 pt-0">Data: `ts_target_position` vs. `ts_actual_position`</CardDescription>
           </Card>
+          </div>
         </TabsContent>
 
         {/* =======================
               TAB 2: DYNAMICS
            ======================= */}
-        <TabsContent value="dynamics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+        <TabsContent value="dynamics" className="space-y-0 w-full p-2 md:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-0 md:mx-0">
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               tcpForceData,
               [
                 { key: "j1", name: "Force X", color: "#8884d8" },
@@ -284,7 +283,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Measured Tool Force (TCP) vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart
                   data={tcpForceData}
                   lines={[
@@ -293,10 +292,9 @@ export default function AnalysisPage() {
                     { key: "j3", name: "Force Z", color: "#ffc658" },
                   ]}
                 />
-                <CardDescription className="mt-2">Data: `ts_tcp_force`</CardDescription>
               </CardContent>
             </Card>
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               tcpTorqueData,
               [
                 { key: "j1", name: "Torque Rx", color: "#db348e" },
@@ -307,7 +305,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Measured Tool Torque (TCP) vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart
                   data={tcpTorqueData}
                   lines={[
@@ -316,10 +314,9 @@ export default function AnalysisPage() {
                     { key: "j3", name: "Torque Rz", color: "#db6234" },
                   ]}
                 />
-                <CardDescription className="mt-2">Data: `ts_tcp_torque`</CardDescription>
               </CardContent>
             </Card>
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               targetTorqueData,
               [
                 { key: "j1", name: "J1 Torque", color: "#8884d8" },
@@ -333,7 +330,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Target Joint Torque vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart data={targetTorqueData} lines={[
                   { key: "j1", name: "J1 Torque", color: "#8884d8" },
                   { key: "j2", name: "J2 Torque", color: "#82ca9d" },
@@ -342,10 +339,9 @@ export default function AnalysisPage() {
                   { key: "j5", name: "J5 Torque", color: "#34d3db" },
                   { key: "j6", name: "J6 Torque", color: "#db6234" },
                 ]} />
-                <CardDescription className="mt-2">Data: `ts_target_torque`</CardDescription>
               </CardContent>
             </Card>
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               targetAccelerationData,
               [
                 { key: "j1", name: "J1 Accel", color: "#8884d8" },
@@ -359,7 +355,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Target Joint Acceleration vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart data={targetAccelerationData} lines={[
                   { key: "j1", name: "J1 Accel", color: "#8884d8" },
                   { key: "j2", name: "J2 Accel", color: "#82ca9d" },
@@ -368,7 +364,6 @@ export default function AnalysisPage() {
                   { key: "j5", name: "J5 Accel", color: "#34d3db" },
                   { key: "j6", name: "J6 Accel", color: "#db6234" },
                 ]} />
-                <CardDescription className="mt-2">Data: `ts_target_acceleration`</CardDescription>
               </CardContent>
             </Card>
           </div>
@@ -377,9 +372,9 @@ export default function AnalysisPage() {
         {/* =======================
               TAB 3: ELECTRICAL
            ======================= */}
-        <TabsContent value="electrical" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+        <TabsContent value="electrical" className="space-y-0 w-full p-2 md:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-0 md:mx-0">
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               actualCurrentData,
               [
                 { key: "j1", name: "J1 Current", color: "#8884d8" },
@@ -393,7 +388,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Actual Joint Current vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart data={actualCurrentData} lines={[
                   { key: "j1", name: "J1 Current", color: "#8884d8" },
                   { key: "j2", name: "J2 Current", color: "#82ca9d" },
@@ -402,10 +397,9 @@ export default function AnalysisPage() {
                   { key: "j5", name: "J5 Current", color: "#34d3db" },
                   { key: "j6", name: "J6 Current", color: "#db6234" },
                 ]} />
-                <CardDescription className="mt-2">Data: `ts_actual_current`</CardDescription>
               </CardContent>
             </Card>
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => openChartModal(
               controlCurrentData,
               [
                 { key: "j1", name: "J1 Control Current", color: "#8884d8" },
@@ -419,7 +413,7 @@ export default function AnalysisPage() {
               "chart"
             )}>
               <CardHeader><CardTitle>Joint Control Current vs. Time</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                 <Chart data={controlCurrentData} lines={[
                   { key: "j1", name: "J1 Control Current", color: "#8884d8" },
                   { key: "j2", name: "J2 Control Current", color: "#82ca9d" },
@@ -428,19 +422,17 @@ export default function AnalysisPage() {
                   { key: "j5", name: "J5 Control Current", color: "#34d3db" },
                   { key: "j6", name: "J6 Control Current", color: "#db6234" },
                 ]} />
-                <CardDescription className="mt-2">Data: `ts_control_current`</CardDescription>
               </CardContent>
             </Card>
-            <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => {
+            <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors p-3 md:p-4" onClick={() => {
               setModalData({ data: dummyScatterData });
               setModalTitle("Current vs. Velocity (Joint 1) (Detailed View)");
               setModalType("scatter");
               setIsModalOpen(true);
             }}>
               <CardHeader><CardTitle>Current vs. Velocity (Joint 1)</CardTitle></CardHeader>
-              <CardContent className="flex-grow h-80">
+              <CardContent className="flex-grow">
                  <ScatterPlot data={dummyScatterData} /> {/* This still uses dummy data as actual_velocity is not in schema */}
-                 <CardDescription className="mt-2">Data: `ts_actual_current` vs. `ts_actual_velocity` (not yet in schema)</CardDescription>
               </CardContent>
             </Card>
           </div>
@@ -449,8 +441,8 @@ export default function AnalysisPage() {
         {/* =======================
               TAB 4: DIAGNOSTICS
            ======================= */}
-        <TabsContent value="diagnostics" className="space-y-4">
-          <Card className="h-full flex flex-col cursor-pointer hover:bg-accent transition-colors" onClick={() => openChartModal(
+        <TabsContent value="diagnostics" className="space-y-0 w-full p-2 md:p-4 mx-0 md:mx-0">
+          <Card className="flex flex-col cursor-pointer hover:bg-accent transition-colors mx-0 md:mx-0 p-3 md:p-4" onClick={() => openChartModal(
             tempData,
             [
               { key: "j1", name: "J1 Temp", color: "#8884d8" },
@@ -464,7 +456,7 @@ export default function AnalysisPage() {
             "chart"
           )}>
             <CardHeader><CardTitle>Joint Temperature vs. Time</CardTitle></CardHeader>
-            <CardContent className="flex-grow h-80">
+            <CardContent className="flex-grow">
               <Chart
                 data={tempData}
                 lines={[
@@ -476,7 +468,7 @@ export default function AnalysisPage() {
                   { key: "j6", name: "J6 Temp", color: "#db6234" },
                 ]}
               />
-              <CardDescription className="mt-2">Data: `ts_joint_temps`</CardDescription>
+              <CardDescription className="mt-2 text-xs">Data: `ts_joint_temps`</CardDescription>
             </CardContent>
           </Card>
         </TabsContent>
@@ -484,27 +476,27 @@ export default function AnalysisPage() {
 
       </Tabs>
       {/* Modal for detailed chart view */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-[90vh] p-0">
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen} className="w-full max-w-full !w-full !max-w-full">
+        <DialogContent className="max-w-none max-h-none w-full h-full p-0 m-0 rounded-none border-0 !w-full !max-w-full !max-h-none !m-0">
           <DialogHeader className="p-4 pb-2">
             <DialogTitle>{modalTitle}</DialogTitle>
           </DialogHeader>
-          <div className="p-4 overflow-auto h-[calc(90vh-80px)]">
+          <div className="p-4 overflow-auto h-[calc(100vh-80px)]">
             {modalType === "chart" && modalData && (
-              <div className="h-[calc(90vh-120px)]">
-                <Chart 
-                  data={modalData.data} 
-                  lines={modalData.lines} 
+              <div className="w-full h-[calc(100vh-120px)]">
+                <Chart
+                  data={modalData.data}
+                  lines={modalData.lines}
                 />
               </div>
             )}
             {modalType === "targetActual" && modalData && (
-              <div className="h-[calc(90vh-120px)]">
+              <div className="w-full h-[calc(100vh-120px)]">
                 <TargetActualChart data={modalData.data} />
               </div>
             )}
             {modalType === "scatter" && modalData && (
-              <div className="h-[calc(90vh-120px)]">
+              <div className="w-full h-[calc(100vh-120px)]">
                 <ScatterPlot data={modalData.data} />
               </div>
             )}
