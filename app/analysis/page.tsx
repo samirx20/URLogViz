@@ -22,11 +22,51 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+// --- HELPERS (Moved outside to prevent re-creation) ---
+const formatChartData = (timeData: number[], jointData: any) => {
+  if (!timeData || !jointData || !Array.isArray(timeData)) return [];
+
+  // Sample data to improve performance - take every nth point
+  const samplingRate = Math.max(1, Math.floor(timeData.length / 100)); // Max 100 points
+  const sampledData = [];
+
+  for (let i = 0; i < timeData.length; i += samplingRate) {
+    sampledData.push({
+      time: timeData[i],
+      j1: jointData.j1?.[i],
+      j2: jointData.j2?.[i],
+      j3: jointData.j3?.[i],
+      j4: jointData.j4?.[i],
+      j5: jointData.j5?.[i],
+      j6: jointData.j6?.[i],
+    });
+  }
+
+  return sampledData;
+};
+
+const formatTargetActualData = (timeData: number[], targetData: number[], actualData: number[]) => {
+  if (!timeData || !targetData || !actualData || !Array.isArray(timeData)) return [];
+
+  // Sample data to improve performance - take every nth point
+  const samplingRate = Math.max(1, Math.floor(timeData.length / 100)); // Max 100 points
+  const sampledData = [];
+
+  for (let i = 0; i < timeData.length; i += samplingRate) {
+    sampledData.push({
+      time: timeData[i],
+      target: targetData[i],
+      actual: actualData[i],
+    });
+  }
+
+  return sampledData;
+};
+
 // --- THE PAGE COMPONENT ---
-// This would be at a route like /analysis
 export default function AnalysisPage() {
     const [analysisId, setAnalysisId] = useState<string | null>(null);
-    const [isSessionChecked, setIsSessionChecked] = useState<boolean>(false); // NEW: Track if session check is done
+    const [isSessionChecked, setIsSessionChecked] = useState<boolean>(false);
     const [analysisData, setAnalysisData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -40,11 +80,10 @@ export default function AnalysisPage() {
       if (id) {
         setAnalysisId(id);
       }
-      setIsSessionChecked(true); // Mark session check as complete
+      setIsSessionChecked(true);
     }, []);
 
     useEffect(() => {
-      // Don't do anything until we've checked the session storage
       if (!isSessionChecked) return;
 
       if (!analysisId) {
@@ -53,10 +92,10 @@ export default function AnalysisPage() {
       }
 
       const fetchAnalysis = async () => {
-        setIsLoading(true); // Ensure loading is true while fetching
+        setIsLoading(true);
         const { data, error } = await supabase
           .from("analysis_results")
-          .select("*") // Select all data
+          .select("*")
           .eq("id", analysisId)
           .single();
 
@@ -70,133 +109,56 @@ export default function AnalysisPage() {
       fetchAnalysis();
     }, [analysisId, isSessionChecked]);
 
-    if (isLoading) {
-      return (
-        <div className="flex h-[50vh] w-full items-center justify-center">
-          <div className="text-lg text-muted-foreground">Loading detailed analysis...</div>
-        </div>
-      );
-    }
+    // --- MEMOIZED DATA PREPARATION (Now at the top level) ---
+    // These must be called unconditionally, even if data is null (we handle null inside)
 
-    if (!analysisData) {
-      return (
-        <div className="flex h-[50vh] w-full items-center justify-center">
-          <div className="text-lg text-muted-foreground">No analysis found. Please upload a log file.</div>
-        </div>
-      );
-    }
-
-    // --- Helper to format data for charts with sampling to improve performance ---
-    const formatChartData = (timeData: number[], jointData: any) => {
-      if (!timeData || !jointData || !Array.isArray(timeData)) return [];
-
-      // Sample data to improve performance - take every nth point
-      const samplingRate = Math.max(1, Math.floor(timeData.length / 100)); // Max 100 points
-      const sampledData = [];
-
-      for (let i = 0; i < timeData.length; i += samplingRate) {
-        sampledData.push({
-          time: timeData[i],
-          j1: jointData.j1?.[i],
-          j2: jointData.j2?.[i],
-          j3: jointData.j3?.[i],
-          j4: jointData.j4?.[i],
-          j5: jointData.j5?.[i],
-          j6: jointData.j6?.[i],
-        });
-      }
-
-      return sampledData;
-    }
-
-    const formatTargetActualData = (timeData: number[], targetData: number[], actualData: number[]) => {
-      if (!timeData || !targetData || !actualData || !Array.isArray(timeData)) return [];
-
-      // Sample data to improve performance - take every nth point
-      const samplingRate = Math.max(1, Math.floor(timeData.length / 100)); // Max 100 points
-      const sampledData = [];
-
-      for (let i = 0; i < timeData.length; i += samplingRate) {
-        sampledData.push({
-          time: timeData[i],
-          target: targetData[i],
-          actual: actualData[i],
-        });
-      }
-
-      return sampledData;
-    }
-
-    // --- MEMOIZED DATA PREPARATION ---
-    // Using useMemo prevents these heavy calculations from running on every single render
-    // This significantly reduces the "lag" felt after data is fetched.
-    
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const followingErrorData = useMemo(() => 
-      analysisData.ts_following_error ? formatChartData(analysisData.ts_following_error.time, analysisData.ts_following_error) : [],
+      analysisData?.ts_following_error ? formatChartData(analysisData.ts_following_error.time, analysisData.ts_following_error) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const tempData = useMemo(() => 
-      analysisData.ts_joint_temps ? formatChartData(analysisData.ts_joint_temps.time, analysisData.ts_joint_temps) : [],
+      analysisData?.ts_joint_temps ? formatChartData(analysisData.ts_joint_temps.time, analysisData.ts_joint_temps) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const tcpOrientationData = useMemo(() => 
-      analysisData.ts_tcp_orientation ? formatChartData(analysisData.ts_tcp_orientation.time, {
+      analysisData?.ts_tcp_orientation ? formatChartData(analysisData.ts_tcp_orientation.time, {
         j1: analysisData.ts_tcp_orientation.rx,
         j2: analysisData.ts_tcp_orientation.ry,
         j3: analysisData.ts_tcp_orientation.rz,
       }) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const tcpForceData = useMemo(() => 
-      analysisData.ts_tcp_force ? formatChartData(analysisData.ts_tcp_force.time, {
+      analysisData?.ts_tcp_force ? formatChartData(analysisData.ts_tcp_force.time, {
         j1: analysisData.ts_tcp_force.fx,
         j2: analysisData.ts_tcp_force.fy,
         j3: analysisData.ts_tcp_force.fz,
       }) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const tcpTorqueData = useMemo(() => 
-      analysisData.ts_tcp_torque ? formatChartData(analysisData.ts_tcp_torque.time, {
+      analysisData?.ts_tcp_torque ? formatChartData(analysisData.ts_tcp_torque.time, {
         j1: analysisData.ts_tcp_torque.tx,
         j2: analysisData.ts_tcp_torque.ty,
         j3: analysisData.ts_tcp_torque.tz,
       }) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const targetTorqueData = useMemo(() => 
-      analysisData.ts_target_torque ? formatChartData(analysisData.ts_target_torque.time, analysisData.ts_target_torque) : [],
+      analysisData?.ts_target_torque ? formatChartData(analysisData.ts_target_torque.time, analysisData.ts_target_torque) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const targetAccelerationData = useMemo(() => 
-      analysisData.ts_target_acceleration ? formatChartData(analysisData.ts_target_acceleration.time, analysisData.ts_target_acceleration) : [],
+      analysisData?.ts_target_acceleration ? formatChartData(analysisData.ts_target_acceleration.time, analysisData.ts_target_acceleration) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const actualCurrentData = useMemo(() => 
-      analysisData.ts_actual_current ? formatChartData(analysisData.ts_actual_current.time, analysisData.ts_actual_current) : [],
+      analysisData?.ts_actual_current ? formatChartData(analysisData.ts_actual_current.time, analysisData.ts_actual_current) : [],
     [analysisData]);
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const controlCurrentData = useMemo(() => 
-      analysisData.ts_control_current ? formatChartData(analysisData.ts_control_current.time, analysisData.ts_control_current) : [],
+      analysisData?.ts_control_current ? formatChartData(analysisData.ts_control_current.time, analysisData.ts_control_current) : [],
     [analysisData]);
-
-    // Function to get memoized target position data
-    const getTargetPositionData = (jointIndex: number) => {
-      if (!analysisData.ts_target_position || !analysisData.ts_actual_position) return [];
-      return formatTargetActualData(
-        analysisData.ts_target_position.time,
-        analysisData.ts_target_position[`j${jointIndex}`],
-        analysisData.ts_actual_position[`j${jointIndex}`]
-      );
-    };
 
     // Function to open modal with chart data
     const openChartModal = (data: any, lines: any[], title: string, type: "chart" | "targetActual" | "scatter") => {
@@ -214,7 +176,17 @@ export default function AnalysisPage() {
       setIsModalOpen(true);
     };
 
-    // Dummy scatter data for current vs velocity visualization
+    // This helper function uses analysisData but is called during render
+    const getTargetPositionData = (jointIndex: number) => {
+      if (!analysisData?.ts_target_position || !analysisData?.ts_actual_position) return [];
+      return formatTargetActualData(
+        analysisData.ts_target_position.time,
+        analysisData.ts_target_position[`j${jointIndex}`],
+        analysisData.ts_actual_position[`j${jointIndex}`]
+      );
+    };
+
+    // Dummy scatter data
     const dummyScatterData = [
       { x: 0, y: 0, z: 200 },
       { x: 1, y: 1.5, z: 300 },
@@ -224,6 +196,23 @@ export default function AnalysisPage() {
       { x: 5, y: 6, z: 450 },
     ];
 
+    // --- CONDITIONAL RENDERING (Must be AFTER all hooks) ---
+
+    if (isLoading) {
+      return (
+        <div className="flex h-[50vh] w-full items-center justify-center">
+          <div className="text-lg text-muted-foreground">Loading detailed analysis...</div>
+        </div>
+      );
+    }
+
+    if (!analysisData) {
+      return (
+        <div className="flex h-[50vh] w-full items-center justify-center">
+          <div className="text-lg text-muted-foreground">No analysis found. Please upload a log file.</div>
+        </div>
+      );
+    }
 
   return (
     <div className="flex-1 w-full space-y-4 bg-background text-foreground">
