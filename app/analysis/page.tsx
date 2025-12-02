@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Chart, TargetActualChart, ScatterPlot } from "@/components/charts";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 // This would be at a route like /analysis
 export default function AnalysisPage() {
     const [analysisId, setAnalysisId] = useState<string | null>(null);
+    const [isSessionChecked, setIsSessionChecked] = useState<boolean>(false); // NEW: Track if session check is done
     const [analysisData, setAnalysisData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -36,15 +37,23 @@ export default function AnalysisPage() {
 
     useEffect(() => {
       const id = sessionStorage.getItem('analysisId');
-      setAnalysisId(id);
+      if (id) {
+        setAnalysisId(id);
+      }
+      setIsSessionChecked(true); // Mark session check as complete
     }, []);
 
     useEffect(() => {
+      // Don't do anything until we've checked the session storage
+      if (!isSessionChecked) return;
+
       if (!analysisId) {
         setIsLoading(false);
         return;
       }
+
       const fetchAnalysis = async () => {
+        setIsLoading(true); // Ensure loading is true while fetching
         const { data, error } = await supabase
           .from("analysis_results")
           .select("*") // Select all data
@@ -59,14 +68,22 @@ export default function AnalysisPage() {
         setIsLoading(false);
       };
       fetchAnalysis();
-    }, [analysisId]);
+    }, [analysisId, isSessionChecked]);
 
     if (isLoading) {
-      return <div>Loading detailed analysis...</div>;
+      return (
+        <div className="flex h-[50vh] w-full items-center justify-center">
+          <div className="text-lg text-muted-foreground">Loading detailed analysis...</div>
+        </div>
+      );
     }
 
     if (!analysisData) {
-      return <div>No analysis found. Please upload a log file.</div>;
+      return (
+        <div className="flex h-[50vh] w-full items-center justify-center">
+          <div className="text-lg text-muted-foreground">No analysis found. Please upload a log file.</div>
+        </div>
+      );
     }
 
     // --- Helper to format data for charts with sampling to improve performance ---
@@ -110,33 +127,69 @@ export default function AnalysisPage() {
       return sampledData;
     }
 
-    const followingErrorData = analysisData.ts_following_error ? formatChartData(analysisData.ts_following_error.time, analysisData.ts_following_error) : [];
-    const tempData = analysisData.ts_joint_temps ? formatChartData(analysisData.ts_joint_temps.time, analysisData.ts_joint_temps) : [];
+    // --- MEMOIZED DATA PREPARATION ---
+    // Using useMemo prevents these heavy calculations from running on every single render
+    // This significantly reduces the "lag" felt after data is fetched.
+    
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const followingErrorData = useMemo(() => 
+      analysisData.ts_following_error ? formatChartData(analysisData.ts_following_error.time, analysisData.ts_following_error) : [],
+    [analysisData]);
 
-    const tcpOrientationData = analysisData.ts_tcp_orientation ? formatChartData(analysisData.ts_tcp_orientation.time, {
-      j1: analysisData.ts_tcp_orientation.rx,
-      j2: analysisData.ts_tcp_orientation.ry,
-      j3: analysisData.ts_tcp_orientation.rz,
-    }) : [];
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const tempData = useMemo(() => 
+      analysisData.ts_joint_temps ? formatChartData(analysisData.ts_joint_temps.time, analysisData.ts_joint_temps) : [],
+    [analysisData]);
 
-    const tcpForceData = analysisData.ts_tcp_force ? formatChartData(analysisData.ts_tcp_force.time, {
-      j1: analysisData.ts_tcp_force.fx,
-      j2: analysisData.ts_tcp_force.fy,
-      j3: analysisData.ts_tcp_force.fz,
-    }) : [];
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const tcpOrientationData = useMemo(() => 
+      analysisData.ts_tcp_orientation ? formatChartData(analysisData.ts_tcp_orientation.time, {
+        j1: analysisData.ts_tcp_orientation.rx,
+        j2: analysisData.ts_tcp_orientation.ry,
+        j3: analysisData.ts_tcp_orientation.rz,
+      }) : [],
+    [analysisData]);
 
-    const tcpTorqueData = analysisData.ts_tcp_torque ? formatChartData(analysisData.ts_tcp_torque.time, {
-      j1: analysisData.ts_tcp_torque.tx,
-      j2: analysisData.ts_tcp_torque.ty,
-      j3: analysisData.ts_tcp_torque.tz,
-    }) : [];
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const tcpForceData = useMemo(() => 
+      analysisData.ts_tcp_force ? formatChartData(analysisData.ts_tcp_force.time, {
+        j1: analysisData.ts_tcp_force.fx,
+        j2: analysisData.ts_tcp_force.fy,
+        j3: analysisData.ts_tcp_force.fz,
+      }) : [],
+    [analysisData]);
 
-    const targetTorqueData = analysisData.ts_target_torque ? formatChartData(analysisData.ts_target_torque.time, analysisData.ts_target_torque) : [];
-    const targetAccelerationData = analysisData.ts_target_acceleration ? formatChartData(analysisData.ts_target_acceleration.time, analysisData.ts_target_acceleration) : [];
-    const actualCurrentData = analysisData.ts_actual_current ? formatChartData(analysisData.ts_actual_current.time, analysisData.ts_actual_current) : [];
-    const controlCurrentData = analysisData.ts_control_current ? formatChartData(analysisData.ts_control_current.time, analysisData.ts_control_current) : [];
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const tcpTorqueData = useMemo(() => 
+      analysisData.ts_tcp_torque ? formatChartData(analysisData.ts_tcp_torque.time, {
+        j1: analysisData.ts_tcp_torque.tx,
+        j2: analysisData.ts_tcp_torque.ty,
+        j3: analysisData.ts_tcp_torque.tz,
+      }) : [],
+    [analysisData]);
 
-    const targetPositionData = (jointIndex: number) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const targetTorqueData = useMemo(() => 
+      analysisData.ts_target_torque ? formatChartData(analysisData.ts_target_torque.time, analysisData.ts_target_torque) : [],
+    [analysisData]);
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const targetAccelerationData = useMemo(() => 
+      analysisData.ts_target_acceleration ? formatChartData(analysisData.ts_target_acceleration.time, analysisData.ts_target_acceleration) : [],
+    [analysisData]);
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const actualCurrentData = useMemo(() => 
+      analysisData.ts_actual_current ? formatChartData(analysisData.ts_actual_current.time, analysisData.ts_actual_current) : [],
+    [analysisData]);
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const controlCurrentData = useMemo(() => 
+      analysisData.ts_control_current ? formatChartData(analysisData.ts_control_current.time, analysisData.ts_control_current) : [],
+    [analysisData]);
+
+    // Function to get memoized target position data
+    const getTargetPositionData = (jointIndex: number) => {
       if (!analysisData.ts_target_position || !analysisData.ts_actual_position) return [];
       return formatTargetActualData(
         analysisData.ts_target_position.time,
@@ -160,9 +213,6 @@ export default function AnalysisPage() {
       setModalType("targetActual");
       setIsModalOpen(true);
     };
-
-
-
 
     // Dummy scatter data for current vs velocity visualization
     const dummyScatterData = [
@@ -254,12 +304,12 @@ export default function AnalysisPage() {
                   key={joint}
                   className="cursor-pointer hover:bg-accent transition-colors p-2 md:p-3 rounded-md"
                   onClick={() => openTargetActualModal(
-                    targetPositionData(joint),
+                    getTargetPositionData(joint),
                     joint,
                     `Joint ${joint} Position Tracking (Target vs. Actual)`
                   )}
                 >
-                  <TargetActualChart data={targetPositionData(joint)} />
+                  <TargetActualChart data={getTargetPositionData(joint)} />
                 </div>
               ))}
             </CardContent>

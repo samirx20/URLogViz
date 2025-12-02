@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import React from "react"; 
 
-// --- DUMMY DATA ---
+// ... (Keep DUMMY DATA and KpiCard component exactly as they are) ...
 // In a real app, you'd fetch this data based on the page ID
 const kpiData = {
   fileName: "ur5testresult_coldstart_fullspeed_payload4.5lb_1.csv",
@@ -97,24 +97,32 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, description, icon }) =>
 );
 
 // --- THE PAGE COMPONENT ---
-// This would be at a route like /dashboard
 export default function DashboardPage() {
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [isSessionChecked, setIsSessionChecked] = useState<boolean>(false); // NEW: Track session check
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = createClient();
 
   useEffect(() => {
     const id = sessionStorage.getItem('analysisId');
-    setAnalysisId(id);
+    if (id) {
+      setAnalysisId(id);
+    }
+    setIsSessionChecked(true); // Mark session check as complete
   }, []);
 
   useEffect(() => {
+    // Only proceed if we have finished checking the session
+    if (!isSessionChecked) return;
+
     if (!analysisId) {
       setIsLoading(false);
       return;
     };
+
     const fetchAnalysis = async () => {
+      setIsLoading(true); // Ensure loading is true while fetching
       const { data, error } = await supabase
         .from("analysis_results")
         .select("file_name, kpi_max_following_error, kpi_peak_current, kpi_peak_temp, kpi_peak_tcp_force, anomalies")
@@ -129,26 +137,23 @@ export default function DashboardPage() {
       setIsLoading(false);
     };
     fetchAnalysis();
-  }, [analysisId]);
+  }, [analysisId, isSessionChecked]); // Add isSessionChecked dependency
 
   if (isLoading) {
-    return <div>Loading analysis...</div>;
+    return (
+      <div className="flex h-[50vh] w-full items-center justify-center">
+        <div className="text-lg text-muted-foreground">Loading analysis...</div>
+      </div>
+    );
   }
 
   if (!analysisData) {
-    return <div>No analysis found. Please upload a log file.</div>;
+    return (
+      <div className="flex h-[50vh] w-full items-center justify-center">
+        <div className="text-lg text-muted-foreground">No analysis found. Please upload a log file.</div>
+      </div>
+    );
   }
-  
-  // Using dummy data for now
-  // const analysisData = {
-  //   file_name: kpiData.fileName,
-  //   kpi_max_following_error: kpiData.maxFollowingError,
-  //   kpi_peak_current: kpiData.peakMotorCurrent,
-  //   kpi_peak_temp: kpiData.peakTemperature,
-  //   kpi_peak_tcp_force: kpiData.peakTcpForce,
-  //   anomalies: anomalyData,
-  // };
-
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-background text-foreground">
